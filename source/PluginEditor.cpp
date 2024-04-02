@@ -57,11 +57,11 @@ void PunkEQEditor::paint (juce::Graphics& g)
     auto hiMidFRadians = juce::jmap(hiMidFKnob.getValue(), 620.0, 4000.0, -150.0, 150.0) * DEG2RADS;
     auto hiFRadians = juce::jmap(hiFKnob.getValue(), 1500.0, 14500.0, -150.0, 150.0) * DEG2RADS;
     // ============== Draw frequency knobs ==========================
-    g.drawImageTransformed(knobImage, knobRotation(lowFRadians, 15.0, 25.0, 0.3261));
-    g.drawImageTransformed(knobImage, knobRotation(lowMidFRadians, 55.0, 25.0, 0.3261));
-    g.drawImageTransformed(knobImage, knobRotation(midFRadians, 95.0, 25.0, 0.3261));
-    g.drawImageTransformed(knobImage, knobRotation(hiMidFRadians, 135.0, 25.0, 0.3261));
-    g.drawImageTransformed(knobImage, knobRotation(hiFRadians, 175.0, 25.0, 0.3261));
+    g.drawImageTransformed(knobImage, knobRotation(lowFRadians, 15.0, 25.0, 0.3261f));
+    g.drawImageTransformed(knobImage, knobRotation(lowMidFRadians, 55.0, 25.0, 0.3261f));
+    g.drawImageTransformed(knobImage, knobRotation(midFRadians, 95.0, 25.0, 0.3261f));
+    g.drawImageTransformed(knobImage, knobRotation(hiMidFRadians, 135.0, 25.0, 0.3261f));
+    g.drawImageTransformed(knobImage, knobRotation(hiFRadians, 175.0, 25.0, 0.3261f));
     
     // ========== Gain sliders y position ==================
     auto lowGYPos = juce::jmap(lowGKnob.getValue(), 10.0, -10.0, 98.0, 168.0);
@@ -105,7 +105,7 @@ void PunkEQEditor::setSliderComponent(juce::Slider &slider, std::unique_ptr<juce
         slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     addAndMakeVisible(slider);
-    slider.setAlpha(0);
+    // slider.setAlpha(0);
 }
 
 void PunkEQEditor::setToggleComponent(juce::ToggleButton& button, std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>& buttonAttachment, juce::String paramName){

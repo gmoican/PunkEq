@@ -92,19 +92,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout PunkEQProcessor::createParam
         
     params.push_back(std::make_unique<juce::AudioParameterBool>("ONOFF", "On/Off", true));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("LO_F", "Low frequency", juce::NormalisableRange<float>(30.0f, 100.0f, 0.1f), DEFAULT_LO, "Hz"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LO_F", "Low frequency", juce::NormalisableRange<float>(30.0f, 100.0f, 0.1f, 0.667f), DEFAULT_LO, "Hz"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LO_G", "Low gain", juce::NormalisableRange<float>(-10.0f, 10.0f, 0.1f), DEFAULT_GAIN, "dB"));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("LOMID_F", "Low mids frequency", juce::NormalisableRange<float>(85.0f, 360.0f, 0.1f), DEFAULT_LOMID, "Hz"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LOMID_F", "Low mids frequency", juce::NormalisableRange<float>(85.0f, 360.0f, 0.1f, 0.62f), DEFAULT_LOMID, "Hz"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LOMID_G", "Low mids gain", juce::NormalisableRange<float>(-10.0f, 10.0f, 0.1f), DEFAULT_GAIN, "dB"));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("MID_F", "Low frequency", juce::NormalisableRange<float>(200.0f, 1300.0f, 0.1f), DEFAULT_MID, "Hz"));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("MID_G", "Low gain", juce::NormalisableRange<float>(-10.0f, 10.0f, 0.1f), DEFAULT_GAIN, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("MID_F", "Mids frequency", juce::NormalisableRange<float>(200.0f, 1300.0f, 0.1f, 0.547f), DEFAULT_MID, "Hz"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("MID_G", "Mids gain", juce::NormalisableRange<float>(-10.0f, 10.0f, 0.1f), DEFAULT_GAIN, "dB"));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("HIMID_F", "High mids frequency", juce::NormalisableRange<float>(620.0f, 4000.0f, 0.1f), DEFAULT_HIMID, "Hz"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("HIMID_F", "High mids frequency", juce::NormalisableRange<float>(620.0f, 4000.0f, 0.1f, 0.548f), DEFAULT_HIMID, "Hz"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("HIMID_G", "High mids gain", juce::NormalisableRange<float>(-10.0f, 10.0f, 0.1f), DEFAULT_GAIN, "dB"));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("HI_F", "Highs frequency", juce::NormalisableRange<float>(1500.0f, 14500.0f, 0.1f), DEFAULT_HI, "Hz"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("HI_F", "Highs frequency", juce::NormalisableRange<float>(1500.0f, 14500.0f, 0.1f, 0.49f), DEFAULT_HI, "Hz"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("HI_G", "Highs gain", juce::NormalisableRange<float>(-10.0f, 10.0f, 0.1f), DEFAULT_GAIN, "dB"));
         
     return { params.begin(), params.end() };
@@ -121,18 +121,23 @@ void PunkEQProcessor::updateEq()
 {
     auto LO_F = state.getRawParameterValue("LO_F")->load();
     auto LO_G = state.getRawParameterValue("LO_G")->load();
+    auto LO_Q = juce::jmap(abs(LO_G), 0.f, 10.f, 1.f, 1.25f);
     
     auto LOMID_F = state.getRawParameterValue("LOMID_F")->load();
     auto LOMID_G = state.getRawParameterValue("LOMID_G")->load();
+    auto LOMID_Q = juce::jmap(abs(LOMID_G), 0.f, 10.f, 1.f, 1.2f);
     
     auto MID_F = state.getRawParameterValue("MID_F")->load();
     auto MID_G = state.getRawParameterValue("MID_G")->load();
+    auto MID_Q = juce::jmap(abs(MID_G), 0.f, 10.f, 0.707f, 1.f);
     
     auto HIMID_F = state.getRawParameterValue("HIMID_F")->load();
     auto HIMID_G = state.getRawParameterValue("HIMID_G")->load();
+    auto HIMID_Q = juce::jmap(abs(HIMID_G), 0.f, 10.f, 0.707f, 1.f);
     
     auto HI_F = state.getRawParameterValue("HI_F")->load();
     auto HI_G = state.getRawParameterValue("HI_G")->load();
+    auto HI_Q = juce::jmap(abs(HI_G), 0.f, 10.f, 0.707f, 1.f);
     
     LO_G = juce::Decibels::decibelsToGain(LO_G);
     LOMID_G = juce::Decibels::decibelsToGain(LOMID_G);
@@ -142,11 +147,11 @@ void PunkEQProcessor::updateEq()
     
     double sampleRate = getSampleRate();
     
-    *equalizer.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, LO_F, 1.f, LO_G);
-    *equalizer.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, LOMID_F, 1.f, LOMID_G);
-    *equalizer.get<2>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, MID_F, 1.f, MID_G);
-    *equalizer.get<3>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, HIMID_F, 1.f, HIMID_G);
-    *equalizer.get<4>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, HI_F, 1.f, HI_G);
+    *equalizer.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, LO_F, LO_Q, LO_G);
+    *equalizer.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, LOMID_F, LOMID_Q, LOMID_G);
+    *equalizer.get<2>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, MID_F, MID_Q, MID_G);
+    *equalizer.get<3>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, HIMID_F, HIMID_Q, HIMID_G);
+    *equalizer.get<4>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, HI_F, HI_Q, HI_G);
 }
 
 void PunkEQProcessor::updateState()
