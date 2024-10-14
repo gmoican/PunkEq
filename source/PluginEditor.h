@@ -22,6 +22,7 @@ public:
     void setSliderComponent(juce::Slider& slider, std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& sliderAttachment, juce::String paramName, bool style);
     void setToggleComponent(juce::ToggleButton& button, std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>& buttonAttachment, juce::String paramName);
     juce::AffineTransform knobRotation(float radians, float posX, float posY, float scaleFactor);
+    double getRadiansFromNormalizedSkewedRange(const juce::NormalisableRange<double>& range, double value, double skewMidpoint);
     
 private:
     // Parameters
